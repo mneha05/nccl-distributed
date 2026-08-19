@@ -1,0 +1,8 @@
+Notes for NCCL distributed training
+
+Use PyTorch's `torch.distributed.launch` or `torchrun` with `--nproc_per_node` and ensure NCCL backend is used:
+
+Example:
+python -m torch.distributed.run --nproc_per_node=2 train.py
+
+Ensure `NCCL_SOCKET_IFNAME` and network settings are correct when using multiple machines.

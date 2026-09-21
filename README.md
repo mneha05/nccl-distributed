@@ -1,29 +1,55 @@
-NCCL Distributed Training — DDP & Multi-Node Examples
+# NCCL Distributed Collectives Lab
 
-![status](https://img.shields.io/badge/status-scaffold-ready-yellow)
+A minimal multi-GPU systems project for measuring NCCL AllReduce latency and bandwidth across local GPUs.
 
-This repository provides reproducible examples and runbooks for launching multi-GPU distributed training using NCCL and PyTorch DDP. It contains launch scripts, environment notes, and a small DDP example (`train_ddp.py`).
+## What it demonstrates
 
-Highlights
-- `train_ddp.py`: minimal DDP example using `LOCAL_RANK` pattern
-- `run_example.ps1`: launcher notes for single-node multi-GPU and multi-node setups
-- Guidance for NCCL environment tuning and networking
+- One process per GPU using Python multiprocessing
+- NCCL-backed PyTorch distributed process groups
+- Warm-up + timed AllReduce iterations
+- Correctness checking after collective reduction
+- JSON benchmark output for latency and effective algorithmic bandwidth
+- Environment-aware launch that works on a single multi-GPU machine
 
-Architecture diagram
+## Run
+
+```bash
+python -m pip install -r requirements.txt
+python nccl_bench.py --world-size 2 --elements 8388608 --iterations 100
+```
+
+The benchmark requires at least `world-size` visible NVIDIA GPUs.
+
+## Data flow
 
 ```mermaid
 flowchart LR
-	A[Launcher (torchrun)] --> B[Processes per GPU]
-	B --> C[NCCL Backend]
-	C --> D[Gradient Allreduce]
+  G0[GPU 0 tensor] --> N[NCCL AllReduce]
+  G1[GPU 1 tensor] --> N
+  G2[GPU 2 tensor] --> N
+  N --> O0[reduced tensor GPU 0]
+  N --> O1[reduced tensor GPU 1]
+  N --> O2[reduced tensor GPU 2]
 ```
 
-Why this impresses
-- Shows distributed-training infrastructure knowledge and NCCL tuning awareness — key for NVIDIA infra roles
+## Output
 
-Demo GIF placeholder:
+```json
+{
+  "world_size": 2,
+  "elements": 8388608,
+  "mean_ms": "... measured ...",
+  "p95_ms": "... measured ...",
+  "algorithmic_bandwidth_GBps": "... measured ..."
+}
+```
 
-![ddp-demo](./assets/ddp_launch.gif)
+The repository intentionally does not publish made-up throughput numbers.
 
-License: MIT
+## Resume-safe description
 
+Built a multi-GPU collective benchmark using NCCL/PyTorch Distributed, process-per-GPU launch, synchronization barriers, correctness checks, and repeatable AllReduce latency/bandwidth measurement.
+
+## License
+
+MIT
